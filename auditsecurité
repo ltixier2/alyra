@@ -12,16 +12,17 @@ contract Crowdsale {
    // Initialization
    function Crowdsale(address _escrow) public{
        //ne pas utiliser tx.origin mais msg.sender 
-       owner = tx.origin;
+       owner = msg.sender;
        // add address of the specific contract
        escrow = _escrow;
    }
   
    // function to receive ETH
-   function() public {
+   receive()   payable external{
        balances[msg.sender] = balances[msg.sender].add(msg.value);
        savedBalance = savedBalance.add(msg.value);
-       escrow.send(msg.value);
+       escrow.transfert(msg.value);
+       // utiliser transfert plutot que send avec fonction fallback. 
    }
   
    // refund investisor 
@@ -31,7 +32,8 @@ contract Crowdsale {
    function withdrawPayments() public{
        address payee = msg.sender;
        uint256 payment = balances[payee];
- 
+       require(payment !=0);
+       require(address(this).balance >= payment); 
        payee.send(payment);
  
        savedBalance = savedBalance.sub(payment);
